@@ -1,0 +1,37 @@
+---
+title: "Homework1_MVA"
+output: html_document
+Author: Gauri Raghuram
+netid: gr514
+date: "2024-02-09"
+---
+```{r}
+#Questions:
+##1. Ask an important question you want answered (1 at least) : 2 Points
+##2. Answer why this question(s) is/are important to you: 2 Points
+##3. Find and collect data (need one dependent variable and more than 3 dependent variables): 2 Points
+##4. Describe your data (create a data dictionary): 4 Points
+
+#Answers:
+##1. My Question is, "Can we accurately predict the quality of a fruit based on its various measured attributes (Size, Weight, Sweetness, Crunchiness etc,.)? And can we identify key combinations or patterns that strongly influence quality?"
+
+##2.This question is important as it focuses on the relationship between multiple characteristics of a fruit and its overall quality. Understanding this relationship can have practical applications in agriculture, allowing farmers or producers to create or change the conditions for growing fruits with desired qualities. It also helps the consumer market, since consumers will have choices based on the expected quality of the fruit.This is very essential to improve right kind of fruit is reached to everyone and in turn they have right for good quality food. 
+
+##3. The Dependent Variable in the Data is: "Quality" (good/bad)
+## The Independent Variables in the data are: "Size", "Weight", "Sweetness", "Crunchiness", "Juiciness", "Ripeness", "Acidity".
+
+##4. About the Data: This dataset contains information about various attributes of apples, providing insights into their different characteristics and also information about their Quality as "Good/Bad". The dataset is from an American agricultural company and taken from Kaggle.
+
+##Data Dictionary:
+##A_id: Unique identifier for each apple
+##Size: Size of the fruit
+##Weight: Weight of the fruit
+##Sweetness: Degree of sweetness of the fruit
+##Crunchiness: Texture indicating the crunchiness of the apple
+##Juiciness: Level of juiciness of the fruit
+##Ripeness: Stage of ripeness of the apple
+##Acidity: Acidity level of the apple
+##Quality: Overall quality of the apple
+
+```
+
