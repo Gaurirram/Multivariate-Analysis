@@ -1,0 +1,117 @@
+---
+title: "EDA_apple_quality"
+output: html_document
+date: "2024-02-18"
+---
+
+## Boxplot:
+
+### Question: How is the distribution of the attributes (Size, Weight, Sweetness, Crunchiness, Juiciness, Ripeness, Acidity) for different apple qualities (good/bad)?
+
+```{r}
+library(readr)
+apples <- read_csv("D:/Rutgers/R2nd Semester/Multivariate/apple_quality.csv")
+str(apples)
+boxplot(apples[,2:8])
+```
+
+##### Inference: Used a boxplot to visualize the distribution of each attribute for different apple qualities.The boxplot provides a summary of the distribution of each attribute, including median, quartiles, and potential outliers, allowing you to observe the variability in each attribute based on apple quality. We can observe that crunchiness and weight have more outliers comparitively than other attributes.
+
+
+
+## Histograms for Weight:
+
+### Question:What is the distribution of weights among apples in the dataset?
+
+```{r}
+library(ggplot2)
+ggplot(apples, aes(Weight))+geom_histogram()
+ggplot(apples, aes(Weight))+geom_histogram(aes(fill = after_stat(count)))
+
+ggplot(apples, aes(Size))+geom_histogram()
+ggplot(apples, aes(Size))+geom_histogram(aes(fill = after_stat(count)))
+
+ggplot(apples, aes(Sweetness))+geom_histogram()
+ggplot(apples, aes(Sweetness))+geom_histogram(aes(fill = after_stat(count)))
+
+ggplot(apples, aes(Crunchiness))+geom_histogram()
+ggplot(apples, aes(Crunchiness))+geom_histogram(aes(fill = after_stat(count)))
+
+ggplot(apples, aes(Juiciness))+geom_histogram()
+ggplot(apples, aes(Juiciness))+geom_histogram(aes(fill = after_stat(count)))
+
+ggplot(apples, aes(Ripeness))+geom_histogram()
+ggplot(apples, aes(Ripeness))+geom_histogram(aes(fill = after_stat(count)))
+
+ggplot(apples, aes(Acidity))+geom_histogram()
+ggplot(apples, aes(Acidity))+geom_histogram(aes(fill = after_stat(count)))
+
+```
+
+##### Inference: Created histograms to visualize the distribution of weights.The histograms show the frequency distribution of weights. We can observe the central tendency and spread of weights in the dataset. We can observe from the graphs that Ripeness and crunchiness are more normally distributes than the others. These histograms provide insights into the distribution patterns of each attribute, helping to understand the range and concentration of values.
+
+
+## Pairs Plot:
+
+### Question: What are the pairwise relationships and distributions between different attributes?
+
+```{r}
+pairs(apples[,2:8])
+```
+
+##### Inference: Utilized the `pairs` function to create a matrix of scatterplots for pairwise attribute comparisons. The pairs plot allows you to identify patterns, correlations, and potential clusters in the data. It's useful for exploring relationships between multiple attributes simultaneously. In the visual we created above since there are too many data points, it is all looking clustered and is difficult to analyze from the same.
+
+
+
+
+## Scatter Plot Matrix with GGally:
+
+### Question: How do Size, Sweetness, Juiciness, Weight, Crunchiness, and Ripeness collectively relate to apple quality?
+
+```{r}
+library(GGally)
+ggscatmat(apples, columns=2:8, color="Quality")
+```
+
+##### Inference: Constructed a scatter plot matrix using `ggscatmat` from GGally, color-coded by apple quality. The scatter plot matrix helps visualize the relationships between pairs of attributes, considering the apple quality as a categorical variable. It's useful for identifying patterns and trends.In this graph it is a little better to analyze because it is color coded and also has a histogram representation. It also includes the exact number of the correlation between two attributes. With this we can get to know the trends and patterns of attributes which are affecting the apple quality. We can see that the combination of size and crunchiness have the most normally distributed graph and also a greater number of good quality apples.
+
+
+
+
+
+
+## Custom Scatter Plot Matrix with ggplot2 and GGally:
+
+### Question: How do certain attribute combinations relate to apple quality?
+
+```{r}
+library(ggplot2)
+library(GGally)
+
+# Scatter plot matrix
+scatter_matrix <- ggplot(apples, aes(color = Quality)) +
+  geom_point(aes(x = Size, y = Weight)) +
+  geom_point(aes(x = Sweetness, y = Crunchiness)) +
+  geom_point(aes(x = Juiciness, y = Ripeness)) +
+  
+  labs(title = "Scatter Plot Matrix of Attributes by Apple Quality",
+       x = "Size+Sweetness+Juiciness",  
+       y = "Weight+Crunchiness+Ripeness")  
+
+print(scatter_matrix)
+```
+
+##### Inference: Created a custom scatter plot matrix using `ggplot2` and `GGally` to visualize Size, Sweetness, Juiciness, Weight, Crunchiness, and Ripeness. This custom scatter plot matrix focuses on specific attribute combinations, providing a detailed view of their relationships based on apple quality. I created a combination of size, sweetness and juciness as one and weight, crunchiness and Ripeness as one more combination. 
+
+
+
+
+
+### Question: What is the correlation between different attributes (Size, Weight, Sweetness, Crunchiness, Juiciness, Ripeness, Acidity) in the apples dataset?
+
+```{r}
+library(corrplot)
+corrplot(cor(apples[,2:8]), type = "upper", method = "color")
+```
+
+##### Inference: The correlation plot visually represents the pairwise correlations between attributes. Positive correlations are indicated by color shades towards blue, while negative correlations are indicated by color shades towards red. The intensity of color represents the strength of the correlation. Insights can be drawn regarding which attributes tend to have a strong positive or negative relationship. We can see that none of the attributes are negatively correlated, which means if any one attribute is increasing then that does not affect any other attribute negatively. We can also see that none of the attributes are completely positively realted also.
