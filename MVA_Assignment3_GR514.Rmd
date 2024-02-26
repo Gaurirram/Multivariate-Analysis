@@ -1,0 +1,298 @@
+---
+title: "Mean and Variance Analysis"
+output: html_document
+date: "2024-02-24"
+---
+
+#### Firstly, I have imported my dataset to check the columns, its datatype and other related properties.
+
+```{r}
+library(readr)
+apples <- read_csv("D:/Rutgers/R2nd Semester/Multivariate/apple_quality.csv")
+attach(apples)
+str(apples)
+```
+
+#### The below code gives the values of the columns as per the dataset.
+
+```{r}
+apples$Quality <- as.factor(apples$Quality)
+apples_x <- apples[, 2:8]
+apples_x
+```
+
+#### The below code is used to check the mean of the columns, the covariance between them and vector (apples_d) where each element corresponds to the distance of the corresponding observation from the mean, considering the covariance structure.
+
+
+```{r}
+apples_cm <- colMeans(apples_x)
+apples_S <- cov(apples_x)
+apples_d <- apply(apples_x, MARGIN = 1, function(apples_x)t(apples_x - apples_cm) %*% solve(apples_S) %*% (apples_x - apples_cm))
+apples_cm
+apples_S
+apples_d 
+```
+
+### T-Tests
+#### I wanted to perform t-tests on each of the characteristic of the apple to check which set of apples which had a particular characteristic had more tendency to have good quality or bad quality. Wanted to check the significance.
+
+```{r}
+with(data=apples,t.test(Size[Quality=="good"],Size[Quality=="bad"],var.equal=TRUE))
+```
+
+### Inference 
+#### It can be observed that Size is significantly affecting the quality of the apple because its p value is less than 0.05. 
+
+```{r}
+with(data=apples,t.test(Weight[Quality=="good"],Weight[Quality=="bad"],var.equal=TRUE))## Weight is not significantly affecting the quality of the apples.
+```
+
+### Inference
+#### It can be observed that Weight is not significantly affecting the quality of the apples because the p value is greater than 0.05.
+
+```{r}
+with(data=apples,t.test(Sweetness[Quality=="good"],Sweetness[Quality=="bad"],var.equal=TRUE))
+```
+
+### Inference
+#### It can be observed that Sweetness is significantly affecting the quality of the apple because its p value id too less than 0.05.
+
+```{r}
+with(data=apples,t.test(Crunchiness[Quality=="good"],Crunchiness[Quality=="bad"],var.equal=TRUE))
+```
+
+### Inference
+#### It can be observed that Crunchiness is not significantly affecting the quality of the apples because the p value is greater than 0.05.
+
+```{r}
+with(data=apples,t.test(Juiciness[Quality=="good"],Juiciness[Quality=="bad"],var.equal=TRUE))
+```
+
+### Inference
+#### It can be observed that Juiciness is significantly affecting the quality of the apple because its p value id too less than 0.05.
+
+```{r}
+with(data=apples,t.test(Ripeness[Quality=="good"],Ripeness[Quality=="bad"],var.equal=TRUE))
+```
+
+### Inference
+#### It can be observed that Ripeness is significantly affecting the quality of the apple because its p value id too less than 0.05.
+
+```{r}
+with(data=apples,t.test(Acidity[Quality=="good"],Acidity[Quality=="bad"],var.equal=TRUE))
+```
+
+### Inference
+#### It can be observed that Acidity is significantly affecting the quality of the apple because its p value id too less than 0.05.
+
+#### After performing t-test on all of the characteristics, I observed the p values are very low for most of the characteristics, hence I did not scale the values down and perform the t-tests again.
+
+
+### Multivariate Analysis
+#### I wanted to perform multivariate analysis and check the p value when all the characteristics are considered together.
+
+```{r}
+library(Hotelling)
+t2testapple <- hotelling.test(Size+ Weight + Sweetness + Crunchiness + Ripeness + Acidity ~ Quality, data=apples)
+
+cat("T2 statistic =",t2testapple$stat[[1]],"\n")
+print(t2testapple)
+```
+
+### Inference
+#### It can be observed that the p value is 0, which is telling that the since the p values of most of the characteristic is 0 except for three of them, they very strongly significantly affecting the quality of the apple. 
+
+
+#### I wanted to check the p value when I considered the characterictics which gave me p values greater than 0.05.
+
+```{r}
+library(Hotelling)
+t2testapple <- hotelling.test(Weight + Crunchiness + Acidity ~ Quality, data=apples)
+
+cat("T2 statistic =",t2testapple$stat[[1]],"\n")
+print(t2testapple)
+```
+
+### Inference
+#### It can be observed that the p value is greater than 0.05, which tells that the weight, Crunchiness and Acidity are not significatly affecting the quality of the apple.
+
+
+
+
+### Levene Test
+#### I wanted to check with how much significance each characteristic of the apple is affecting its quality using levene test.
+
+```{r}
+library(car)
+leveneTest(Size ~ Quality, data=apples)
+```
+
+### Inference
+#### It can be observed that the size of the apple is significantly affecting the quality of the apple.
+
+```{r}
+leveneTest(Weight ~ Quality, data=apples)
+
+```
+
+### Inference
+#### It can be observed that the weight of the apple is significantly affecting the quality of the apple.
+
+```{r}
+leveneTest(Sweetness ~ Quality, data=apples)
+
+```
+
+### Inference
+#### It can be observed that the sweetness of the apple is not that significantly affecting the quality of the apple.
+
+```{r}
+leveneTest(Crunchiness ~ Quality, data=apples)
+
+```
+
+### Inference
+#### It can be observed that the crunchiness of the apple is significantly affecting the quality of the apple.
+
+```{r}
+leveneTest(Juiciness ~ Quality, data=apples)
+
+```
+
+### Inference
+#### It can be observed that the Juiciness of the apple is significantly affecting the quality of the apple.
+
+```{r}
+leveneTest(Ripeness ~ Quality, data=apples)
+
+```
+### Inference
+#### It can be observed that the Ripeness of the apple is a little less significantly affecting the quality of the apple.
+
+```{r}
+leveneTest(Acidity ~ Quality, data=apples)
+```
+
+### Inference
+#### It can be observed that the Acidity of the apple is significantly affecting the quality of the apple.
+
+
+### Analysis of Variance Test
+#### I wanted to check with how much significance each characteristic of the apple is affecting its quality using analysis of varience test.
+
+```{r}
+summary(aov(Size ~ Quality))
+
+```
+
+### Inference
+#### It can be observed that the size of the apple is significantly affecting the quality of the apple.
+
+
+```{r}
+summary(aov(Weight ~ Quality))
+
+```
+
+### Inference
+#### It can be observed that the weight of the apple is not very significantly affecting the quality of the apple.
+
+```{r}
+summary(aov(Sweetness ~ Quality))
+
+```
+
+### Inference
+#### It can be observed that the sweetness of the apple is significantly affecting the quality of the apple.
+
+```{r}
+summary(aov(Crunchiness ~ Quality))
+
+```
+
+### Inference
+#### It can be observed that the crunchiness of the apple is not very significantly affecting the quality of the apple.
+
+```{r}
+summary(aov(Juiciness ~ Quality))
+
+```
+
+### Inference
+#### It can be observed that the Juiciness of the apple is significantly affecting the quality of the apple.
+
+```{r}
+summary(aov(Ripeness ~ Quality))
+
+```
+
+### Inference
+#### It can be observed that the Ripeness of the apple is significantly affecting the quality of the apple.
+
+```{r}
+summary(aov(Acidity ~ Quality))
+```
+
+### Inference
+#### It can be observed that the Acidity of the apple is not very significantly affecting the quality of the apple.
+
+
+### F-Tests
+#### I wanted to check with how much significance each characteristic of the apple is affecting its quality using F test.
+
+```{r}
+attach(apples)
+var.test(Size[Quality=="good"],Size[Quality=="bad"])
+```
+
+### Inference
+#### It can be observed that the Size of the apple is significantly affecting the quality of the apple.
+
+```{r}
+attach(apples)
+var.test(Weight[Quality=="good"],Weight[Quality=="bad"])
+```
+
+### Inference
+#### It can be observed that the weight of the apple is significantly affecting the quality of the apple.
+
+```{r}
+attach(apples)
+var.test(Sweetness[Quality=="good"],Sweetness[Quality=="bad"])
+```
+
+### Inference
+#### It can be observed that the Sweetness of the apple is not significantly affecting the quality of the apple.
+
+```{r}
+attach(apples)
+var.test(Crunchiness[Quality=="good"],Crunchiness[Quality=="bad"])
+```
+
+### Inference
+#### It can be observed that the crunchiness of the apple is significantly affecting the quality of the apple.
+
+```{r}
+attach(apples)
+var.test(Juiciness[Quality=="good"],Juiciness[Quality=="bad"])
+```
+
+### Inference
+#### It can be observed that the Juiciness of the apple is significantly affecting the quality of the apple.
+
+
+```{r}
+attach(apples)
+var.test(Ripeness[Quality=="good"],Ripeness[Quality=="bad"])
+```
+
+### Inference
+#### It can be observed that the Ripeness of the apple is significantly affecting the quality of the apple.
+
+```{r}
+attach(apples)
+var.test(Acidity[Quality=="good"],Acidity[Quality=="bad"])
+```
+
+### Inference
+#### It can be observed that the Acidity of the apple is significantly affecting the quality of the apple.
