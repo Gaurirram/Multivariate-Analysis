@@ -1,0 +1,209 @@
+---
+title: "PCA"
+output: html_document
+date: "2024-03-03"
+---
+
+#### Firstly, I have imported my dataset to check the columns, its datatype and other related properties.
+
+```{r}
+library(readr)
+apples <- read_csv("D:/Rutgers/R2nd Semester/Multivariate/apple_quality.csv")
+attach(apples)
+str(apples)
+```
+
+#### The below code I used to get the Correlations between the measurements
+
+```{r}
+cor(apples[, c("Size", "Weight", "Crunchiness", "Sweetness", "Juiciness", "Ripeness", "Acidity")])
+```
+
+### Inference
+#### We can see that most of the characteristics of the apple are negatively correlated, which means that if one increases the other one will decrease.
+
+#### The below code is used to get the principle components for the dataset, and also the by how much each principle component is contributing to the overall.
+
+```{r}
+apples_pca <- prcomp(apples[, c("Size", "Weight", "Crunchiness", "Sweetness", "Juiciness", "Ripeness", "Acidity")],scale=TRUE)
+apples_pca
+```
+
+```{r}
+summary(apples_pca)
+```
+
+### Inference
+#### From the above analysis I decided to choose PC1 to PC4, to balance between capturing a substantial portion of the variance and retaining interpretability, which cumulatively gives 0.769, which is 90% of the threshold.
+
+#### The next few bits of code explains various steps which are involved in order to arrive at the summary of principle components.
+
+
+```{r}
+(eigen_apples <- apples_pca$sdev^2)
+```
+
+```{r}
+names(eigen_apples) <- paste("PC",1:7,sep="")
+eigen_apples
+```
+
+### Inference
+#### The above has assigned the eigen values based on the principle components.
+
+```{r}
+sumlambdas <- sum(eigen_apples)
+sumlambdas
+```
+
+### Inference
+#### The above has calculated the total variance in the data and given it to be 7.
+
+```{r}
+propvar <- eigen_apples/sumlambdas
+propvar
+
+```
+
+### Inference
+#### The above has calculated the proportion of each variance, by each principle component.
+
+
+```{r}
+cumvar_apples <- cumsum(propvar)
+cumvar_apples
+
+```
+
+### Inference
+#### The above calculated the cumulative portion of each component.
+
+
+```{r}
+matlambdas <- rbind(eigen_apples,propvar,cumvar_apples)
+rownames(matlambdas) <- c("Eigenvalues","Prop. variance","Cum. prop. variance")
+round(matlambdas,4)
+```
+
+### Inference
+#### The above shows the summary of the PCAs.
+
+
+```{r}
+summary(apples_pca)
+apples_pca$rotation
+print(apples_pca)
+apples_pca$x
+```
+### Inference
+#### The proportion of variance explained by each principal component is given. PC1 explains the highest proportion, and the cumulative proportion shows that the first few components capture a significant amount of the overall variability.
+#### The rotation matrix (apples_pca$rotation) is indicating the relationship between the original variables and the principal components.
+
+```{r}
+apptyp_pca <- cbind(data.frame(Quality),apples_pca$x)
+apptyp_pca
+```
+
+#### In the below code we are trying to see how far the good or bad quality is from the mean 0 for each PC.
+
+```{r}
+tabmeansPC <- aggregate(apptyp_pca[,2:8],by=list(Quality=apples$Quality),mean)
+tabmeansPC
+
+```
+
+### Inference
+#### We can observe that for all the PCs the good and bad quality are negatively correlated.
+
+```{r}
+tabmeansPC <- tabmeansPC[rev(order(tabmeansPC$Quality)),]
+tabmeansPC
+
+```
+
+### Inference
+#### The above result shows the reverse of the previous process, because we performed the reverse function.
+
+```{r}
+tabfmeans <- t(tabmeansPC[,-1])
+tabfmeans
+
+```
+
+```{r}
+colnames(tabfmeans) <- t(as.vector(tabmeansPC[1]$Quality))
+tabfmeans
+```
+### Inference for the above two bits of the code
+#### For PC1, PC3, PC5, PC6, variables with higher positive loadings contribute more to the "good" category, while variables with higher negative loadings contribute more to the "bad" category. For PC2, PC4, PC7, variables with higher positive loadings contribute more to the "bad" category, while variables with higher negative loadings contribute more to the "good" category.
+
+```{r}
+tabsdsPC <- aggregate(apptyp_pca[,2:8],by=list(Quality=apples$Quality),sd)
+tabfsds <- t(tabsdsPC[,-1])
+colnames(tabfsds) <- t(as.vector(tabsdsPC[1]$Quality))
+tabfsds
+```
+
+### Inference
+#### The above result is the reverse of the above result because we used the reverse function.
+
+#### Now we are performing visualization.
+### Scree Diagram
+
+```{r}
+plot(eigen_apples, xlab = "Component number", ylab = "Component variance", type = "l", main = "Scree diagram")
+```
+
+### Inference
+#### From the above graph, we can stop at any of the sharp edges, according to my analysis above, I have decided to retain only till PC4, to balance between capturing a substantial portion of the variance and retaining interpretability, which cumulatively gives 0.769, which is 90% of the threshold.
+
+### Log Diagram
+
+```{r}
+plot(log(eigen_apples), xlab = "Component number",ylab = "log(Component variance)", type="l",main = "Log(eigenvalue) diagram")
+```
+
+### Inference
+#### From the above graph, we can stop at any of the sharp edges, according to my analysis above, I have decided to retain only till PC4, to balance between capturing a substantial portion of the variance and retaining interpretability, which cumulatively gives 0.769, which is 90% of the threshold.
+
+
+### Correaltion Graph
+
+```{r}
+plot(apples[, c("Size", "Weight", "Crunchiness", "Sweetness", "Juiciness", "Ripeness", "Acidity")])
+```
+
+### Inference
+#### The above analysis shows that the characteristics are positively and negatively related.
+
+#### The below is used to plot the variance against the principle components.
+
+```{r}
+plot(apples_pca)
+```
+
+### Box Plots
+
+```{r}
+apples$Quality <- as.factor(apples$Quality)
+out <- sapply(1:7, function(i){plot(apples$Quality,apples_pca$x[,i],xlab=paste("PC",i,sep=""),ylab="Quality")})
+```
+
+### Inference
+#### Center of the Box (Median), indicates the median score for each principal component. The Box Spread (Interquartile Range), represents the spread of the scores around the median, offering insights into the variability. The Whiskers, illustrate the range of the scores within a certain threshold, helping identify outliers.
+
+### Variable Factor Map
+
+```{r}
+chooseCRANmirror(ind = 1)
+install.packages("factoextra")
+library(factoextra)
+fviz_pca_var(apples_pca,col.var = "cos2",
+             gradient.cols = c("#FFCC00", "#CC9933", "#660033", "#330033"),
+             repel = TRUE)
+
+```
+
+### Inference
+#### Variables with similar colors share similar contributions to the principal components, and their positions on the map show their relationships. Closer proximity implies similar contributions. In summary, the graph helps visualize the quality and contribution of each variable to the principal components. Brighter colors indicate variables that align well with the components, while the gradient provides a sense of the variable representation's strength. The arrangement of variables on the map reflects their relationships in the reduced-dimensional space.
+
