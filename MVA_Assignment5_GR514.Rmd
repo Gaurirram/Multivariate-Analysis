@@ -1,0 +1,194 @@
+---
+title: "Cluster_Analysis"
+output: html_document
+date: "2024-03-06"
+---
+
+
+```{r}
+apples <- read.csv("D:/Rutgers/R2nd Semester/Multivariate/apple2.csv",row.names=1)
+apples
+matstd.can <- scale(apples[, c("Size", "Weight", "Crunchiness", "Sweetness", "Juiciness", "Ripeness", "Acidity")])
+```
+
+### Hierarchic cluster analysis - nearest neighbour.
+
+```{r}
+matstd.apple <- scale(apples[, c("Size", "Weight", "Crunchiness", "Sweetness", "Juiciness", "Ripeness", "Acidity")][,1:7])
+dist.apple <- dist(matstd.apple, method="euclidean")
+clusapple.nn <- hclust(dist.apple, method = "single")
+plot(as.dendrogram(clusapple.nn),ylab="Distance between apple Quality",ylim=c(0,1.5),main="Dendrogram of quality of apples")
+```
+
+### Inference
+#### The above shows the dendogram of the data. It is showing the number of clusters.
+
+
+### K-means Hierarchical Clustering
+#### K-means clustering with 2 clusters
+
+```{r}
+matstd.apple <- scale(apples[,1:7])
+(kmeans2.apple <- kmeans(matstd.apple,2,nstart = 10))
+perc.var.2 <- round(100*(1 - kmeans2.apple$betweenss/kmeans2.apple$totss),1)
+names(perc.var.2) <- "Perc. 2 clus"
+perc.var.2
+```
+
+### Inference
+#### The cluster-sum of squares is observed to be 13.3%.
+
+#### K-means clustering for 3 clusters
+
+```{r}
+(kmeans3.apple <- kmeans(matstd.apple,3,nstart = 10))
+perc.var.3 <- round(100*(1 - kmeans3.apple$betweenss/kmeans3.apple$totss),1)
+names(perc.var.3) <- "Perc. 3 clus"
+perc.var.3
+```
+
+### Inference
+#### The cluster-sum of squares is observed to be 23.9%.
+
+#### K-means clustering for 4 clusters
+
+```{r}
+(kmeans4.apple <- kmeans(matstd.apple,4,nstart = 10))
+perc.var.4 <- round(100*(1 - kmeans4.apple$betweenss/kmeans4.apple$totss),1)
+names(perc.var.4) <- "Perc. 4 clus"
+perc.var.4
+```
+
+### Inference
+#### The cluster-sum of squares is observed to be 31.3%.
+
+
+#### K-means clustering for 5 clusters
+
+```{r}
+(kmeans5.apple <- kmeans(matstd.apple,5,nstart = 10))
+perc.var.5 <- round(100*(1 - kmeans5.apple$betweenss/kmeans5.apple$totss),1)
+names(perc.var.5) <- "Perc. 5 clus"
+perc.var.5
+```
+
+### Inference
+#### The cluster-sum of squares is observed to be 36.6%.
+
+#### K-means clustering for 6 clusters
+
+```{r}
+(kmeans6.apple <- kmeans(matstd.apple,6,nstart = 10))
+perc.var.6 <- round(100*(1 - kmeans6.apple$betweenss/kmeans6.apple$totss),1)
+names(perc.var.6) <- "Perc. 6 clus"
+perc.var.6
+```
+
+### Inference
+#### The cluster-sum of squares is observed to be 40.4%.
+
+```{r}
+attributes(perc.var.6)
+Variance_List <- c(perc.var.2,perc.var.3,perc.var.4,perc.var.5,perc.var.6)
+```
+
+### Plotting to find out the optimal number of clusters
+
+```{r}
+Variance_List
+plot(Variance_List)
+```
+
+### Inference
+#### From the graph we can observe that having 5 clusters is optimal, because the graph seems to get flatter after that point.
+
+
+### Graph to find out the optimal number of clusters
+
+```{r}
+library(magrittr)
+my_data <- apples[, c("Size", "Weight", "Crunchiness", "Sweetness", "Juiciness", "Ripeness", "Acidity")] %>% na.omit() %>% scale()
+```
+
+
+
+```{r}
+library(factoextra)
+fviz_nbclust(my_data, kmeans, method = "wss") + geom_vline(xintercept =4, linetype = 2)
+```
+
+### Inference
+#### From the above graph we can infer that the optimal number of clusters for the dataset would be 4
+
+### Membership of each cluster
+
+```{r}
+set.seed(123)
+km.res <- kmeans(my_data, 4, nstart = 25)
+fviz_cluster(km.res, data = my_data,
+             ellipse.type = "convex",
+             palette = "jco",
+             ggtheme = theme_minimal())
+```
+
+### Inference
+#### It can be observed that there are 4 clusters formed. Cluster 1 and 2 seem to be more populated. And cluster 4 seems to be small with just three observations.
+
+### Visualization of the cluster and membership using the first two Principle Component 
+
+```{r}
+apples_pca <- prcomp(apples[, c("Size", "Weight", "Crunchiness", "Sweetness", "Juiciness", "Ripeness", "Acidity")],scale=TRUE)
+apples_pca
+summary(apples_pca)
+```
+
+```{r}
+apples_pca$x
+```
+
+#### Considering only the first two Principal Components:
+
+```{r}
+PC1 <- apples_pca$x[,1]
+PC2 <- apples_pca$x[,2]
+```
+
+```{r}
+apples_pca_df <- data.frame(Index = rownames(apples_pca$x), PC1 = PC1, PC2= PC2)
+apples_pca_df
+```
+
+```{r}
+matstd.pca_apples <- apples_pca_df[, c("PC1","PC2")]
+```
+
+#### To find out the optimal number of cluster:
+
+```{r}
+fviz_nbclust(matstd.pca_apples, kmeans, method ="wss")+geom_vline(xintercept = 4, linetype = 2)
+```
+
+### Inference
+#### It can be observed that optimal number of clusters is 4.
+
+### Clustering Analysis
+
+```{r}
+set.seed(123)
+kmeans4.apples_pca <- kmeans(matstd.pca_apples, 4, nstart = 25)
+
+kmeans4.apples_pca
+```
+
+```{r}
+km.res_pca <- kmeans(matstd.pca_apples, 4, nstart =4)
+
+fviz_cluster(km.res_pca, data = matstd.pca_apples,
+             ellipse.type = "convex",
+             palette = "jco",
+             ggtheme = theme_minimal(),
+             )
+```
+
+### Inference
+#### It can be observed that there are 4 clusters which are formed. But when compared with the previous cluster analysis, the size od cluster 1 and 2 have reduced and cluster 3 and 4 also have more observations than before.
