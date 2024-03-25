@@ -1,0 +1,68 @@
+---
+title: "Factor Analysis"
+output: html_document
+date: "2024-03-22"
+---
+
+### Number of Ideal Factors for my dataset
+#### To decide the number of ideal factors, I am performing the following factor analysis.
+
+```{r}
+library(psych)
+apples <- read.csv("D:/Rutgers/R2nd Semester/Multivariate/apple_quality.csv",row.names=1)
+apples2<- apples[, c("Size","Weight","Crunchiness", "Sweetness", "Juiciness", "Ripeness", "Acidity")]
+attach(apples2)
+apples2[1]
+fit.pc <- principal(apples2[-1], nfactors=3, rotate="varimax")
+fit.pc
+fa.diagram(fit.pc)
+```
+
+### Inference
+#### I performed the above analysis, with the number of factors being 3,4 and 5.
+#### The mean value, for all three values of factors I considered, was around 1 itslef, hence with respect to mean all the three values were good.
+#### Next when I considered Fit values, for the value 3 as we can observe is 0.19, for the value 4 it was 0.56, and for the value 5 it was 0.84.
+#### But when I performed visualization of the relationship formed, for all the 3 factors(for number of factors 3, its shown above and for the number of factors 4 and 5 its shown below.), it can be observed that it is best to have number of factors as 3 because of the number of columns that go into each group, and considering the common and unique variance.
+
+#### For the number of factors equal to 3, we see the columns Acidity, Ripeness, and sweetness go into one group, the columns crunchiness and juiciness go into one group and weight goes into another group.
+
+
+```{r}
+fit.pc <- principal(apples2[-1], nfactors=4, rotate="varimax")
+fa.diagram(fit.pc)
+```
+
+### Inference
+#### We can see that, Acidity and Juiciness go into one group, Sweetness and Ripeness goes to the next group, and crunchiness and weight alone go to two different groups.
+
+```{r}
+fit.pc <- principal(apples2[-1], nfactors=5, rotate="varimax")
+fa.diagram(fit.pc)
+```
+
+### Inference
+#### We can observe that Weight and Ripeness go into one group, each of Sweetness, Juiciness, Crunchiness, and Acidity go to different individual groups.
+
+#### The below code is used to check the commonality of variance each column is having.
+
+```{r}
+for (i in c(1,3,2)) { print(fit.pc$loadings[[1,i]])}
+fit.pc$communality
+```
+
+### Visualizations
+
+```{r}
+fa.parallel(apples2[-1])
+```
+### Inference
+#### From the above graph we can observe that it is good to have one or more factors. But if we look at it from a Factor/Component Number perspective, then having 2 or 3 factors is better is what we can observe.
+
+### Correlation plot
+
+```{r}
+fa.plot(fit.pc)
+```
+
+### Inference
+#### We can observe that, the factors are not very much correlated, there is factor independence, which also indicates distinctiveness.
