@@ -1,0 +1,24 @@
+---
+title: "MVA Distance Of Social Media"
+output: html_document
+date: "2024-03-25"
+---
+
+```{r}
+library(psych)
+library(readxl)
+mva <- read_excel("D:/Rutgers/R2nd Semester/Multivariate/MVA_Social_Media_Cleaned.xlsx")
+mva2<-mva[, c("Instagram_Hours","LinkedIn_Hours","Snapchat_Hours","Twitter_Hours","Whatsapp_Wechat_hours","Reddit_hours","Youtube_hours","OTT_hours")]
+mva2 <- mva2[-1]
+
+
+#correlation matrix / class avg
+scale <- scale(mva2)
+
+classcov <- cor(mva2)
+classmean <- colMeans(mva2)
+
+mvascale <- mahalanobis(mva2, classmean, classcov)
+print(mvascale[21])
+```
+
