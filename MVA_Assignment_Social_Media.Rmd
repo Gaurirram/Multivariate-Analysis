@@ -1,0 +1,168 @@
+---
+title: "Social Media"
+output: html_document
+date: "2024-03-27"
+---
+
+## Dataset
+
+```{r}
+library(readr)
+library(factoextra)
+library(FactoMineR)
+library(magrittr)
+library(NbClust)
+social <- read.csv("D:/Rutgers/R2nd Semester/Multivariate/Socialmediacleaned.csv",row.names=1)
+social2<-social[, c("Instagram_Hours","LinkedIn_Hours","Snapchat_Hours","Twitter_Hours","Whatsapp_Wechat_hours","Reddit_hours","Youtube_hours","OTT_hours")]
+str(social2)
+```
+
+## PCA Analysis
+#### I am performing the following PCA analysis for doing dimentionality reduction and also understanding on what basis the reduction is happening.
+
+
+```{r}
+cor(social[, c("Instagram_Hours","LinkedIn_Hours","Snapchat_Hours","Twitter_Hours","Whatsapp_Wechat_hours","Reddit_hours","Youtube_hours","OTT_hours")])
+```
+
+### Inference
+* Correlation is helping us understand, how the columns we are trying to analyze are related to each other. 
+* We can observe some columns are positively correlated while some are negatively correlated.
+
+```{r}
+social_pca <- prcomp(social[, c("Instagram_Hours","LinkedIn_Hours","Snapchat_Hours","Twitter_Hours","Whatsapp_Wechat_hours","Reddit_hours","Youtube_hours","OTT_hours")],scale=TRUE)
+social_pca
+```
+
+```{r}
+summary(social_pca)
+```
+
+### Inference
+* The above PCA analysis done shows the number of principle components our dataset can be divided into. Our data set can be divided into 8 principle components.
+* As we can observe, the first four PCs explain 80% of the datasets total variance. After PC4 the increase in cumulative variance becomes less substancial for each additional component.
+
+### ScreePlot
+
+```{r}
+library(factoextra)
+(eigen_social <- social_pca$sdev^2)
+names(eigen_social) <- paste("PC",2:9,sep="")
+
+plot(eigen_social, xlab = "Component number", ylab = "Component variance", type = "l", main = "Scree diagram")
+
+fviz_eig(social_pca, addlabels = TRUE)
+```
+
+### Inference
+* The scree diagram shows us that sum of the first 3 principal components is 71.1% and tells 3 PCs should be considered.
+* So, we can use PCA for column reduction as well.
+* And we can also observe a significant curve shift after the third dimension.
+
+### Biplot
+
+```{r}
+fviz_pca_var(social_pca,col.var = "cos2",
+             gradient.cols = c("#FFCC00", "#CC9933", "#660033", "#330033"),
+             repel = TRUE)
+```
+
+### Inference
+* The distance between points in a biplot reflects the generalised distance between them.
+* Correlation of the variables reflected by the angle between them. The smaller the angle, the more significant the correlation.
+* For example, it shows that LinkedIn_Hours and Youtube_Hours correlated strongly.
+
+### Individual PCA
+
+```{r}
+library(FactoMineR)
+res.pca <- PCA(social2, graph = FALSE)
+
+fviz_pca_ind(res.pca)
+```
+
+### Inference
+* The students have been plotted based on their PCA values in the individual PCA plot.
+* The students are allocated based on their similarities.
+
+### PCA-biplot
+
+```{r}
+fviz_pca_biplot(res.pca, repel = TRUE,
+                col.var = "#FC4E07", 
+                )
+```
+
+### Inference
+* We can observe how one set of students use the apps more than the other set of students. 
+* We can also observe what which apps are used common by which set of students.
+* And we can also see two outliers who use certain apps more than anybody else.
+
+### Overall PCA Analysis insights 
+* For me the analysis showed that, I am an outlier from the class who used a certain type of app more than everyone else in the class, and told me which apps are those as well.
+* For the entire class, it segregated them into two groups, one who use the apps for more hours compared to the other set of class who used less hours, and also tells how certain apps can be combined to form one PC and how that can in turn reduce dimentionality.
+
+## Cluster Analysis
+
+
+```{r}
+matstd_social <- scale(social2)
+fviz_nbclust(matstd_social, kmeans, method ="wss")+geom_vline(xintercept = 4, linetype = 2)
+```
+
+### Inference
+* Cluster analysis, groups the rows into clusters based on the similarities observed between them.
+* In our dataset we will be observing how students can be formed into clusters based on the similarities they have with respect to the apps they use.
+* For our dataset it can be observed that ideal number of clusters is 4.
+
+### Hierarcical Clustering
+
+```{r}
+library(magrittr)
+res.hc <- matstd_social %>% scale() %>% dist(method = "euclidean") %>%
+  hclust(method = "ward.D2")
+
+fviz_dend(res.hc, k = 4, # Cut in four groups
+          cex = 0.5, # label size
+          k_colors = c("#2E9FDF", "#00AFBB", "#E7B800", "#FC4E07"),
+          color_labels_by_k = TRUE, # color labels by groups
+          rect = TRUE # Add rectangle around groups
+          )
+```
+
+### Inference
+* The dendogram shows how the students are divided into which cluster.
+
+### Overall Cluster Analysis Insights
+* We can observe from that, the outliers I observed in my PCA Analysis are formed into two separate clusters.
+* The two sets which we observed, one set consisting of people who used the apps comparitively more than the other set.
+* I was an outlier, hence I have been put into separate cluster in the cluster analysis.
+
+
+### Factor Analysis
+
+```{r}
+library(psych)
+attach(social2)
+social2[1]
+fit.pc <- principal(social2[-1], nfactors=3, rotate="varimax")
+fit.pc
+fa.diagram(fit.pc)
+```
+
+### Inference
+* The three hidden factors are formed as shown.
+* We can see that Youtube_Hours and LinkedIn_Hours are combined together maybe because people might be learning professional experience on both platforms as in to learn something in both concepts, or maybe LinkedIn for learning and Youtube for liesure.
+* We can observe that OTT, Twitter and Snapchat are combined to one, because they are all giving social media entertainment.
+* We can observe that whatsapp_wechat are reddit are inversely correlated, as in, if one is being used more the other is being used less.
+
+### Over insights from Factor Analysis
+* The factor analysis shows how the apps of similar usage category can be combined together and can be helpfull in dimensionality reduction.
+* It tells us what apps students are using together.
+
+### Takeaway From the overall analysis
+* From all the three type of analysis done above, we can observe the following:
+* There are two sets of students in the class which was clearly clustered and diffrentiated. One which has students who spend comparitively more time on these apps and the other which comparitively spend less time on the apps.
+* There are few outliers, which means they spent a lot more time on certain types of apps than others.
+* We could also see which apps are being used the most together, which can be used for dimentionality reduction and better analysis.
+
