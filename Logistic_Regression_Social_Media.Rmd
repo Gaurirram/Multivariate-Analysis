@@ -1,0 +1,116 @@
+---
+title: "Logistic Regression Social Media"
+output: html_document
+date: "2024-04-18"
+---
+
+```{r}
+library(factoextra)
+library(FactoMineR)
+library(psych)
+library(ggplot2)
+library(cowplot)
+library(caret)
+library(e1071)
+library(pROC)
+```
+
+### Model Development
+
+```{r}
+social_log <- read.csv("D:/Rutgers/R2nd Semester/Multivariate/Socialmediacleaned.csv",row.names=1)
+
+sociallog2 <- social_log[, c("Instagram_Hours",	"LinkedIn_Hours",	"Snapchat_Hours", "Twitter_Hours",	"Whatsapp_Wechat_hours", "Reddit_hours",	"Youtube_hours",	"OTT_hours", "Mood_Productivity")]
+```
+
+```{r}
+head(sociallog2)
+```
+
+### Performed the following to check the data type of the columns
+
+```{r}
+str(sociallog2)
+```
+
+### Converting Mood_Productivity to integer since its a charater column.
+
+```{r}
+sociallog2$Mood_Productivity_num <- ifelse(sociallog2$Mood_Productivity == "Yes", 1, 0)
+
+str(sociallog2)
+```
+
+### Converting into factors
+
+```{r}
+sociallog2[sociallog2 == "?"] <- NA
+sociallog2$Mood_Productivity <- ifelse(test=sociallog2$Mood_Productivity =="Yes", yes="Yes", no="No") 
+sociallog2$Mood_Productivity <- as.factor(sociallog2$Mood_Productivity)
+
+
+```
+
+### Inference
+* We are converting the categorical column, which is our predictor column into factors to make it easier for R to recognize it as a categorical column .
+* We have converted it into factors with 2 levels.
+
+
+
+
+```{r}
+str(sociallog2)
+```
+
+### Inference
+* We can see that Mood_Productivity column has changed to factors with 2 levels.
+
+### Performing Logistic Regression model
+
+```{r}
+logistic_simple <- glm(Mood_Productivity ~ ., data=sociallog2, family="binomial")
+summary(logistic_simple)
+```
+
+### Inference
+* As we can observe the p value is 1 for all the outcome variables, which means that there is a weak relationship between the predictor and outcome variable.
+
+### Residual Analysis
+
+```{r}
+predicted.data <- data.frame(probability.of.Mood_Productivity=logistic_simple$fitted.values,Mood_Productivity=sociallog2$Mood_Productivity)
+predicted.data <- predicted.data[order(predicted.data$probability.of.Mood_Productivity, decreasing=FALSE),]
+predicted.data$rank <- 1:nrow(predicted.data)
+ggplot(data=predicted.data, aes(x=rank, y=probability.of.Mood_Productivity)) +
+geom_point(aes(color=Mood_Productivity), alpha=1, shape=4, stroke=2) +
+xlab("Index") +
+ylab("Predicted probability of Mood_Productivity")
+```
+
+### Inference
+* We can observe that there is not much overlap in the residual analysis model performed.
+* This shows the independence of variables, absence of outliers.
+
+### Prediction
+
+```{r}
+pdata <- predict(logistic_simple,newdata=sociallog2,type="response" )
+pdata
+```
+
+### Inference
+* Here the model is predicting mood productivity for every student.
+
+### Confusion matrix with model accuracy
+
+```{r}
+pdataF <- as.factor(ifelse(test=as.numeric(pdata>0.5) == "Yes", yes="Yes", no="No"))
+pdataF <- factor(pdataF, levels = levels(sociallog2$Mood_Productivity))
+
+confusionMatrix(pdataF, sociallog2$Mood_Productivity)
+```
+
+### Inference
+* We can see the models overall performance if it is correctly classifying into its related classes or not.
+* Also tells us about sensitivity, specificity etc.
+* The model accuracy is also shown which is 0.047, where as balanced accuracy is 0.50.
