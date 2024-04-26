@@ -1,0 +1,136 @@
+---
+title: "Discriminant Analysis Social Media"
+output: html_document
+date: "2024-04-25"
+---
+
+```{r}
+library(MASS)
+library(ggplot2)
+library(memisc)
+library(ROCR)
+library(dplyr)
+library(klaR)
+```
+
+#### Calling the social media dataset and converting the necessery columns into factors
+
+```{r}
+social_lda <- read.csv("D:/Rutgers/R2nd Semester/Multivariate/Socialmediacleaned.csv",row.names=1)
+
+sociallda2 <- social_lda[, c("Instagram_Hours",	"LinkedIn_Hours",	"Snapchat_Hours", "Twitter_Hours",	"Whatsapp_Wechat_hours", "Reddit_hours",	"Youtube_hours",	"OTT_hours", "Mood_Productivity")]
+
+
+
+sociallda2[sociallda2 == "?"] <- NA
+sociallda2$Mood_Productivity <- ifelse(test=sociallda2$Mood_Productivity =="Yes", yes="Yes", no="No") 
+sociallda2$Mood_Productivity <- as.factor(sociallda2$Mood_Productivity)
+sociallda2[is.na(sociallda2)] <- mean(sociallda2, na.rm = TRUE)
+
+
+str(sociallda2)
+```
+
+### Model Development 
+### Performing LDA on the actual data without training it
+
+```{r}
+r <- lda(formula = Mood_Productivity ~ ., data = sociallda2)
+r
+```
+
+### Inference
+* The prior probabilities tell us the prior assumption for the likelihood of observing each group in the data. We can see that for 'Yes', the value is higher.
+* The group means gives the mean value for each group. For example individuals in the Yes group spend more number of hours on instagram than the NO group.
+* The coeeficients of LD1 represents contributions of each feature to the linear discriminant function (LD1) that separates the two groups.
+
+
+### We perform the below to find out the in-between group variance of the linear discriminants
+
+```{r}
+r2 <- lda(formula = Mood_Productivity ~ ., data = sociallda2, CV=TRUE)
+r2
+```
+
+### Training our data with a certain sample and then performing LDA
+
+```{r}
+train <- sample(1:15, 10)
+r3 <- lda(Mood_Productivity ~ ., # training model
+          sociallda2,
+          prior = c(0.5,0.5),
+          subset = train)
+r3
+
+```
+
+### Inference
+* The prior probabilities tell us the prior assumption for the likelihood of observing each group in the data. Here we can see that its equal.
+* The group means gives the mean value for each group. For example individuals in the Yes group spend more number of hours on instagram than the NO group.
+* The coeeficients of LD1 represents contributions of each feature to the linear discriminant function (LD1) that separates the two groups.
+
+
+### Predictions
+
+```{r}
+plda = predict(object = r3, # predictions
+               newdata = sociallda2[-train, ])
+head(plda$class)
+```
+
+### Inference
+* Here the model is prediction mood productivity for the students considered in the sample.
+
+### Posterior probability
+
+```{r}
+head(plda$posterior, 6)
+```
+### Inference
+* Here the model is giving posterior probability for the students considered in the sample.
+
+```{r}
+head(plda$x, 3)
+```
+
+### Visulaizations (Residuals)
+
+```{r}
+plot(r)
+```
+
+```{r}
+plot(r3)
+```
+
+### Inference
+* Here, we can see that all the observations are in one line and there is no overlap. 
+
+
+### Visualization for the training data
+
+```{r}
+training_sample <- sample(c(TRUE, FALSE), nrow(sociallda2), replace = T, prob = c(0.75,0.25))
+train <- sociallda2[training_sample, ]
+test <- sociallda2[!training_sample, ]
+#lets run LDA like before
+sociallda2[is.na(sociallda2)] <- mean(sociallda2, na.rm = TRUE)
+lda.sociallda2 <- lda(Mood_Productivity ~ ., train)
+# do a quick plot to understand how good the model is
+plot(lda.sociallda2, col = as.integer(train$Mood_Productivity))
+
+```
+
+### Inference
+* Here, we can see that all the observations are in one line and there is no overlap. 
+
+### Accuracy
+
+```{r}
+lda.train <- predict(lda.sociallda2)
+train$lda <- lda.train$class
+table(train$lda,train$Mood_Productivity)
+```
+
+### Inference
+* We can see that the accuracy of the model is very good as there was no wrong predictions.

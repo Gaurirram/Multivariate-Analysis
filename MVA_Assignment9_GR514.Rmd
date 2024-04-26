@@ -1,0 +1,149 @@
+---
+title: "Discriminant Analysis Apples Quality"
+output: html_document
+date: "2024-04-25"
+---
+
+
+```{r}
+library(MASS)
+library(ggplot2)
+library(memisc)
+library(ROCR)
+library(dplyr)
+library(klaR)
+```
+
+#### Calling the apples quality dataset and converting the necessery columns into factors
+
+```{r}
+apples <- read.csv("D:/Rutgers/R2nd Semester/Multivariate/apple2.csv",row.names=1)
+apples
+apples4 <- apples[, c("Size", "Weight", "Crunchiness", "Sweetness", "Juiciness", "Ripeness", "Acidity","Quality")]
+
+apples4[apples4 == "?"] <- NA
+apples4$Quality <- ifelse(test=apples4$Quality =="good", yes="good", no="bad") 
+apples4$Quality <- as.factor(apples4$Quality)
+
+str(apples4)
+```
+
+### Model Development 
+### Performing LDA on the actual data without training it
+
+```{r}
+rg <- lda(formula = Quality ~ ., data = apples4)
+rg
+```
+
+### Inference
+* The prior probabilities tell us the prior assumption for the likelihood of observing each group in the data. We can see that for 'good', the value is higher.
+* The group means gives the mean value for each group. For example apples in the good group have more crunchiness than the ones in the bad group.
+* The coefficients of LD1 represents contributions of each feature to the linear discriminant function (LD1) that separates the two groups.
+
+
+### We perform the below to find out the in-between group variance of the linear discriminants
+
+```{r}
+rg2 <- lda(formula = Quality ~ ., data = apples4, CV=TRUE)
+rg2
+```
+
+### Training our data with a certain sample and then performing LDA
+
+```{r}
+train <- sample(1:500, 95)
+rg3 <- lda(Quality ~ ., # training model
+          apples4,
+          prior = c(0.5,0.5),
+          subset = train)
+rg3
+
+```
+
+### Inference
+* The prior probabilities tell us the prior assumption for the likelihood of observing each group in the data. Here we can see that its equal.
+* The group means gives the mean value for each group.For example apples in the good group have less crunchiness than the ones in the bad group. 
+* The coeeficients of LD1 represents contributions of each feature to the linear discriminant function (LD1) that separates the two groups.
+* We observe that for the smaples we have taken there is a lot of difference in the output when compared with the full dataset.
+
+
+### Predictions
+
+```{r}
+plda1 = predict(object = rg3, # predictions
+               newdata = apples4[-train, ])
+head(plda1$class)
+```
+
+### Inference
+* Here the model is prediction Quality for the apples considered in the sample.
+
+### Posterior probability
+
+```{r}
+head(plda1$posterior, 50)
+```
+### Inference
+* Here the model is giving posterior probability for the apples considered in the sample.
+
+```{r}
+head(plda1$x, 3)
+```
+### Visulaizations(Residuals)
+
+```{r}
+plot(rg)
+```
+
+### Inference
+* Here we can observe that there is a lot of overlap between the two. There are a lot of residuals.
+
+### For the training data
+
+```{r}
+plot(rg3)
+```
+
+### Inference
+* Here, we can see that all the observations are in one line and there is no overlap. 
+
+
+### Visualization
+
+```{r}
+training_sample1 <- sample(c(TRUE, FALSE), nrow(apples4), replace = T, prob = c(0.75,0.25))
+train1 <- apples4[training_sample1, ]
+test1 <- apples4[!training_sample1, ]
+#lets run LDA like before
+apples4[is.na(apples4)] <- mean(apples4, na.rm = TRUE)
+lda.apples4 <- lda(Quality ~ ., train1)
+# do a quick plot to understand how good the model is
+plot(lda.apples4, col = as.integer(train1$Quality))
+
+```
+
+### Inference
+* Here we can observe that there is a lot of overlap between the two. There are a lot of residuals. 
+
+### Accuracy
+
+```{r}
+lda.train1 <- predict(lda.apples4)
+train1$lda <- lda.train1$class
+table(train1$lda,train1$Quality)
+```
+
+### Inference
+* We can see that the accuracy of the model is not that great because there are quite a few wrong predictions.
+
+### Accuracy on test data
+
+```{r}
+lda.test1 <- predict(lda.apples4,test1)
+test1$lda <- lda.test1$class
+table(test1$lda,test1$Quality)
+```
+
+### Inference
+* We can see that accuracy is a little better than the one performed on training data but still not up to the mark as there are few wrong predictions.
