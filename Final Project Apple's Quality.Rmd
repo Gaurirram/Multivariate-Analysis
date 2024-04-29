@@ -1,0 +1,289 @@
+---
+title: "Final Project Apple's Quality"
+output: html_document
+date: "2024-04-28"
+---
+
+## About the Dataset
+* This dataset contains information about various attributes of apples, providing insights into their different characteristics and also information about their Quality as "Good/Bad". The dataset is from an American agricultural company and taken from Kaggle.
+
+```{r}
+library(readr)
+library(factoextra)
+library(FactoMineR)
+library(magrittr)
+library(NbClust)
+apples <- read.csv("D:/Rutgers/R2nd Semester/Multivariate/apple2.csv",row.names=1)
+str(apples)
+applesf <- apples[, c("Size", "Weight", "Crunchiness", "Sweetness", "Juiciness", "Ripeness", "Acidity")]
+```
+
+### Inference
+* This is the data dictionary of the dataset:
+* A_id: Unique identifier for each apple
+* Size: Size of the fruit
+* Weight: Weight of the fruit
+* Sweetness: Degree of sweetness of the fruit
+* Crunchiness: Texture indicating the crunchiness of the apple
+* Juiciness: Level of juiciness of the fruit
+* Ripeness: Stage of ripeness of the apple
+* Acidity: Acidity level of the apple
+* Quality: Overall quality of the apple
+* The question posed was: Can we accurately predict the quality of a fruit based on its various measured attributes (Size, Weight, Sweetness, Crunchiness etc,.)? And can we identify key combinations or patterns that strongly influence quality?
+
+### EDA Analysis
+
+```{r}
+stars(apples[,1:8])
+```
+
+### Inference
+* Star plot helps us to check the similarity between the different apple's quality.
+* We can observe that few apples's for example, 0,15 have similar characteristics which are influecing the quality of the apple.
+
+### Corealtion plot
+
+```{r}
+pairs(apples[,1:7])
+```
+
+### Inference
+*  Utilized the `pairs` function to create a matrix of scatter plots for pairwise attribute comparisons. The pairs plot allows you to identify patterns, correlations, and potential clusters in the data. It's useful for exploring relationships between multiple attributes simultaneously. In the visual we created above since there are too many data points, it is all looking clustered and is difficult to analyze from the same.
+
+### Plot
+
+```{r}
+library(corrplot)
+corrplot(cor(apples[,1:7]), type = "upper", method = "color")
+```
+
+### Inference
+* The correlation plot visually represents the pairwise correlations between attributes. Positive correlations are indicated by color shades towards blue, while negative correlations are indicated by color shades towards red. The intensity of color represents the strength of the correlation. Insights can be drawn regarding which attributes tend to have a strong positive or negative relationship. We can see that none of the attributes are negatively correlated, which means if any one attribute is increasing then that does not affect any other attribute negatively. We can also see that none of the attributes are completely positively related also. 
+
+
+
+## PCA Analysis
+#### I am performing the following PCA analysis for doing dimentionality reduction and also understanding on what basis the reduction is happening.
+
+
+```{r}
+cor(apples[, c("Size", "Weight", "Crunchiness", "Sweetness", "Juiciness", "Ripeness", "Acidity")])
+```
+
+### Inference
+* Correlation is helping us understand, how the columns we are trying to analyze are related to each other. 
+* We can observe some columns are positively correlated while some are negatively correlated.
+
+```{r}
+apples_pca <- prcomp(apples[, c("Size", "Weight", "Crunchiness", "Sweetness", "Juiciness", "Ripeness", "Acidity")],scale=TRUE)
+apples_pca
+```
+
+```{r}
+summary(apples_pca)
+```
+
+### Inference
+* The above PCA analysis done shows the number of principle components our dataset can be divided into. Our data set can be divided into 7 principle components.
+* As we can observe, the first four PCs explain 80% of the datasets total variance. After PC4 the increase in cumulative variance becomes less substancial for each additional component.
+
+### ScreePlot
+
+```{r}
+library(factoextra)
+(eigen_apple <- apples_pca$sdev^2)
+names(eigen_apple) <- paste("PC",1:7,sep="")
+
+plot(eigen_apple, xlab = "Component number", ylab = "Component variance", type = "l", main = "Scree diagram")
+
+fviz_eig(apples_pca, addlabels = TRUE)
+```
+
+### Inference
+* The scree diagram shows us that sum of the first 3 principal components is 69.8% and tells 3 PCs should be considered.
+* So, we can use PCA for column reduction as well.
+* And we can also observe a significant curve shift after the third dimension.
+
+### Biplot
+
+```{r}
+fviz_pca_var(apples_pca,col.var = "cos2",
+             gradient.cols = c("#FFCC00", "#CC9933", "#660033", "#330033"),
+             repel = TRUE)
+```
+
+### Inference
+* The distance between points in a biplot reflects the generalised distance between them.
+* Correlation of the variables reflected by the angle between them. The smaller the angle, the more significant the correlation.
+* For example, it shows that weight, size and crunchiness are all correlated strongly.
+
+### Individual PCA
+
+```{r}
+library(FactoMineR)
+res.pca <- PCA(applesf, graph = FALSE)
+
+fviz_pca_ind(res.pca)
+```
+
+### Inference
+* The apples have been plotted based on their PCA values in the individual PCA plot.
+* The apples are allocated based on their similarities with their characteristics.
+
+### PCA-biplot
+
+```{r}
+fviz_pca_biplot(res.pca, repel = TRUE,
+                col.var = "#FC4E07", 
+                )
+```
+
+### Inference - PCA Model
+* We can observe how one set of apples have certain characteristics which are common which define the quality of those apples.. 
+* We can see that like observed in the above plot, certain characteristics such as crunchiness, Size and weight are all very strongly corelated and are defining the quality of a certain set of apples.
+* There are certain apples which dont have any characteristics particularly defining the quality of them.
+
+
+## Cluster Analysis
+
+
+```{r}
+matstd_apple <- scale(applesf)
+fviz_nbclust(matstd_apple, kmeans, method ="wss")+geom_vline(xintercept = 4, linetype = 2)
+```
+
+### Inference
+* Cluster analysis, groups the rows into clusters based on the similarities observed between them.
+* In our dataset we will be observing how certain apples can be clustered together based on the similar characteristics defining their quality.
+* For our dataset it can be observed that ideal number of clusters is 4.
+
+### Hierarcical Clustering
+
+```{r}
+library(magrittr)
+res.hc <- matstd_apple %>% scale() %>% dist(method = "euclidean") %>%
+  hclust(method = "ward.D2")
+
+fviz_dend(res.hc, k = 4, # Cut in four groups
+          cex = 0.5, # label size
+          k_colors = c("#2E9FDF", "#00AFBB", "#E7B800", "#FC4E07"),
+          color_labels_by_k = TRUE, # color labels by groups
+          rect = TRUE # Add rectangle around groups
+          )
+```
+
+### Inference - cluster analysis
+* The dendogram shows how the apples are divided into which cluster.
+* They are divided into 4 clusters.
+* Since the apples are given numbers, it is difficult to properly define, but we can tell how many apples are put into one cluster based on which characteristics.
+
+
+### Factor Analysis
+
+```{r}
+library(psych)
+attach(applesf)
+applesf[1]
+fit.pc <- principal(applesf[-1], nfactors=3, rotate="varimax")
+fit.pc
+fa.diagram(fit.pc)
+```
+
+### Inference - Factor Analysis
+* The three hidden factors are formed as shown.
+* We can see that Sweetness and weight are negatively corelated, which meand if the weight of the apple decreases, the sweetness increases and vice versa.
+* Similarly are ripeness and crunchiness.
+* Whereas Juiciness and Acidity are positively corelated, if the apples are more juicy the acidity also increases.
+
+### Now performing different regression techniques on my dataset to see how these columns would individually affect or help predict a predicting column which is quality.
+
+### Multiple Regression
+
+```{r}
+library(factoextra)
+library(FactoMineR)
+library(psych)
+```
+
+```{r}
+apples$Quality_num<- ifelse(apples$Quality == "good", 1, 0)
+
+str(apples)
+# Performing multiple regression on Social Media dataset
+fit_apple <- lm(Quality_num~Size+Weight+Crunchiness+Sweetness+Juiciness+Ripeness+Acidity, data=apples)
+
+#show the results
+summary(fit_apple)
+
+```
+
+### Inference
+
+* The Median being close to 0 showcases that the model is able to predict perfectly.
+* Based on the residual data provided, it can be inferred that residuals may be following a Normal Distribution.
+* Furthermore, it can be observed that Sweetness, Size are the one's which are significantly affecting the target variable.
+* However, the F-Statistic value is above 1 which means it is a good model but not a great model.
+* The model is performing decently.
+* We can see that Crunchiness and Size have good significance in determining the quality of the apples overall.
+* The other characteristics have not much significance on the overall quality of the data.
+
+### Correlation plot
+
+```{r}
+library(GGally)
+ggpairs(data=apples, title="Apple's Quality Data")
+```
+
+### Inference
+* The graph clearly indicates that none of the columns have a linear relationship which shows that the multiple regression model was not that good.
+
+### Logistic Regression
+### Performing logistic regression to check the model performance
+
+```{r}
+library(factoextra)
+library(FactoMineR)
+library(psych)
+library(ggplot2)
+library(cowplot)
+library(caret)
+library(e1071)
+library(pROC)
+```
+
+```{r}
+apples[apples == "?"] <- NA
+apples$Quality <- ifelse(test=apples$Quality =="good", yes="good", no="bad") 
+apples$Quality <- as.factor(apples$Quality)
+logistic <- glm(Quality ~ ., data=apples, family="binomial")
+summary(logistic)
+```
+
+### Inference
+* As we can observe the p value is 1 for all the outcome variables, which means that there is a weak relationship between the predictor and outcome variable.
+
+### Accuracy of the model
+
+```{r}
+pdata1 <- predict(logistic,newdata=apples,type="response" )
+pdata1
+pdataF1 <- as.factor(ifelse(test=as.numeric(pdata1>0.5) == "good", yes="good", no="bad"))
+pdataF1 <- factor(pdataF1, levels = levels(apples$Quality))
+
+confusionMatrix(pdataF1, apples$Quality)
+
+```
+
+### Inference
+* The model accuracy is also shown which is 0.49.
+
+
+### Takeaway From the overall analysis
+* From all the types of analysis done above, we can observe the following:
+* To answer the question which I posed at the start which is : Can we accurately predict the quality of a fruit based on its various measured attributes (Size, Weight, Sweetness, Crunchiness etc,.)? And can we identify key combinations or patterns that strongly influence quality?
+* From multiple regression we can see that We are able to predict the quality of the apple based on the various characteristic's, but very few characteristics have significance on the overall quality such as size and crunchiness. The other characteristics don't have much significance in determining the quality of the apples.
+* We can see that there is a pattern of characteristics which are together affecting the quality of apples. Such as crunchiness, size and weight are strongly co-related.
+* From factor analysis we can see how the characteristics are positively and negatively co-related.
+* We saw that we can reduce the dimension of the whole dataset into 3 PCs, and we also saw that there are only three-four characteristics which are majorly affecting the quality of the apple as weel, hence we can probably reduce the dimension by combining the related columns and have better analysis on the quality of the apples.
+
+
